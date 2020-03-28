@@ -1,0 +1,20 @@
+---
+#- name: SETUP | Ensure storage mount path is ceated
+#  file:
+#    path: /data/glusterfs/hms-gfs-volume/brick{{ ansible_hostname.split('-')[1] }}
+#  register: t
+#  become: yes
+
+debug:
+  - msg: /data/glusterfs/hms-gfs-volume/brick{{ ansible_hostname.split('-')[1] }}
+
+- meta: end_play
+
+- name: SETUP | Ensure storage is mounted in fstab
+  mount:
+    path: /mnt
+    fstype:
+  become: yes
+
+- name: GLUSTERFS | Ensure GlusterFS is installed
+  apt:
