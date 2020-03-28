@@ -1,0 +1,63 @@
+---
+- name: SSH | [LOCAL] ensure ~/.ssh/keys dir exists locally
+  local_action:
+    module: file
+    state: directory
+    path: ~/.ssh/keys
+    mode: 0700
+  run_once: yes
+
+- name: SSH | [LOCAL] check if public key exists locally
+  local_action:
+    module: stat
+    path: '~/.ssh/keys/odroid-{{inventory_hostname}}.pub'
+  register: pub_key
+
+- name: SSH | [LOCAL] generate openssh key pair locally if public key does not exist locally
+  local_action:
+    module: openssh_keypair
+    comment: Odroid {{inventory_hostname | upper}}
+    mode: 0600
+    path: ~/.ssh/keys/odroid-{{inventory_hostname}}
+  register: ssh
+  when: pub_key.stat.exists is false
+
+- name: SSH | [ODROID] ensure public key is in the authorized_keys file
+  lineinfile:
+    path: /home/ollie/.ssh/authorized_keys
+    create: yes
+    mode: 0644
+    regexp: '^\s*ssh-rsa\s+[a-zA-Z0-9/+]+[=]{0,3}\s+Odroid {{inventory_hostname | upper}}\s*$'
+    line: "{{ lookup('file', '~/.ssh/keys/odroid-' + inventory_hostname + '.pub') }}"
+
+- name: SSH | wait until the user has saved private key(s) in credentials manager (e.g. KeePassXC) and deleted them
+  local_action:
+    module: wait_for
+    path: ~/.ssh/keys/odroid-{{inventory_hostname}}
+    state: absent
+    sleep: 5
+
+- name: SSH | [LOCAL] ensure there is a local ssh config entry
+  local_action:
+    module: blockinfile
+    path: ~/.ssh/config.d/odroid-hc2s
+    create: yes
+    mode: 0600
+    block: |
+      Host {{inventory_hostname}} odroid-{{inventory_hostname}} {{ansible_default_ipv4.address}}
+        HostName {{ansible_default_ipv4.address}}
+        User ollie
+        IdentityFile ~/.ssh/keys/odroid-{{inventory_hostname}}.pub
+        IdentitiesOnly yes
+    marker: "# {mark} [ANSIBLE MANAGED] Odroid {{inventory_hostname | upper}} SSH config"
+
+- name: SSH | [LOCAL] ensure local ssh config includes files in the config.d directory
+  local_action:
+    module: lineinfile
+    path: ~/.ssh/config
+    create: yes
+    mode: 0600
+    regexp: '^\s*Include\s+config.d/\*\s*$'
+    line: 'Include config.d/*'
+    insertbefore: BOF
+  run_once: yes

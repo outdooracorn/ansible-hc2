@@ -1,0 +1,9 @@
+---
+- hosts:
+  - odroid_hc2s
+
+  vars:
+    ansible_user: ollie
+
+  roles:
+    - role: glusterfs

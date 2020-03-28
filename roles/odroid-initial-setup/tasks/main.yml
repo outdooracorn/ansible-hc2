@@ -1,0 +1,48 @@
+---
+- name: UPDATE | [ODROID] ensure system is up to date.
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600  # only update apt cache if it's not been updated in over 1 hour (3,600 seconds)
+    upgrade: safe
+  become: yes
+  tags: update
+
+# TODO: change root password?
+
+# This must come before setting the hostname
+- name: SETUP | [ODROID] ensure /etc/hosts is set corretly
+  replace:
+    path: /etc/hosts
+    regexp: '^\s*127.0.0.1\s+{{ansible_hostname}}\s*$'
+    replace: "127.0.0.1\t{{inventory_hostname}}"
+
+- name: SETUP | [ODROID] ensure hostname is set correctly.
+  hostname:
+    name: '{{inventory_hostname}}'
+
+- name: SETUP | [ODROID] ensure group ollie exists
+  group:
+    name: ollie
+
+- name: SETUP | [ODROID] ensure user ollie exists
+  user:
+#    state: absent
+    name: ollie
+    group: ollie
+    groups:
+      - sudo
+    append: yes
+    shell: /bin/bash
+    # TODO: add encrypted password
+    # password: https://docs.ansible.com/ansible/faq.html#how-do-i-generate-encrypted-passwords-for-the-user-module
+
+- name: SETUP | [ODROID] ensure sudo group is in the sudoers file
+  lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: '^\s*%sudo\s+ALL=\(ALL:ALL\)\s+ALL\s*$'
+    line: '%sudo ALL=(ALL:ALL) ALL'
+    validate: /usr/sbin/visudo -cf %s
+
+- import_tasks: ssh.yml
+  tags: ssh

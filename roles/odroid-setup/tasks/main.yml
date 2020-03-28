@@ -1,0 +1,76 @@
+---
+- name: SSH | ensure root login is disabled
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^\s*#*\s*PermitRootLogin\s+'
+    line: 'PermitRootLogin no'
+    validate: sshd -f %s -t
+  register: root_login
+  become: yes
+  tags: ssh
+
+- name: SSH | ensure login with password is disabled
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^\s*#*\s*PasswordAuthentication\s+'
+    line: 'PasswordAuthentication no'
+    validate: sshd -f %s -t
+  register: disable_password
+  become: yes
+  tags: ssh
+
+- name: SSH | restart sshd service
+  service:
+    name: sshd
+    state: restarted
+  become: yes
+  tags: ssh
+  when: root_login.changed or disable_password.changed
+
+- name: ODROID-FIX | ensure hdparm package is installed
+  package:
+    name: hdparm
+    state: present
+  become: yes
+  tags: [fixes, hdd-park]
+
+- name: ODROID-FIX | ensure hdds are parked safely at shutdown
+  copy:
+    src: odroid-disk.shutdown
+    dest: /lib/systemd/system-shutdown/odroid-disk.shutdown
+    mode: 0755
+    owner: root
+    group: root
+  become: yes
+  tags: [fixes, hdd-park]
+
+- import_tasks: watchdog.yml
+  tags: watchdog
+
+
+#- name: USB/SATA BRIDGE: make latest JMS578 Firmware updater available
+#  get_url:
+#    url: https://wiki.odroid.com/_media/odroid-xu4/software/jms578fwupdater.tgz
+#    checksum: 'sha256:0e729256500ee70bb2caa91c584ff9dca06a262b7437c3b6a6529d5168b9a854'
+#    dest: /root/jms578fwupdater.tgz
+#    mode: '0644'
+#    owner: root
+#    group: root
+#
+#- name: ODROID-HC2 TWEAKS: unarchive latest JMS578 Firmware updater
+#  unarchive:
+#    remote_src:     yes
+#    src:            /root/jms578fwupdater.tgz
+#    dest:           /tmp/
+
+# TODO: Fix this or delete?
+# install and enable rngd
+#- name: RNGD | ensure rng-tools package is installed
+#  package:
+#    name:         rng-tools
+#    state:        present
+#- name: RNGD | ensure rngd.service is enabled and started
+#  service:
+#    name:         rng-tools.service
+#    state:        started
+#    enabled:      true

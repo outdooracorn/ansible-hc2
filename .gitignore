@@ -1,0 +1,5 @@
+# IntelliJ based IDE configuration folder
+.idea/
+
+# Python virtual environment
+.venv/

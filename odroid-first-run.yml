@@ -1,0 +1,17 @@
+---
+- hosts:
+  - odroid_hc2s
+
+  vars:
+    ansible_user: root
+    ansible_ssh_pass: odroid
+    ansible_become_password: odroid
+
+  roles:
+    - role: odroid-initial-setup
+      tags: initial-setup
+
+    - role: odroid-setup
+      ansible_user: ollie
+      ansible_become_method: su
+      tags: setup

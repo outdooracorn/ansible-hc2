@@ -1,0 +1,51 @@
+---
+# TODO: Check if watchdog is actually working
+# WATCHDOG setup instructions taken from https://wiki.odroid.com/odroid-xu4/application_note/software/linux_watchdog
+# and https://blog.pcfe.net/hugo/posts/2019-01-29-odroid-hc2-and-ansible/#my-site-specific-setup-playbook
+- name: WATCHDOG | ensure watchdog daemon is installed
+  package:
+    name: watchdog
+    state: present
+  become: yes
+
+- name: WATCHDOG | ensure watchdog_options are set in /etc/default/watchdog
+  lineinfile:
+    path: /etc/default/watchdog
+    regexp: '^watchdog_options'
+    insertafter: '^# Specify additional watchdog options here (see manpage).'
+    line: 'watchdog_options="-s -v -c /etc/watchdog.conf"'
+  become: yes
+
+- name: WATCHDOG | ensure the watchdog-device is set in /etc/watchdog.conf
+  lineinfile:
+    path: /etc/watchdog.conf
+    regexp: '^\s*#*\s*watchdog-device'
+    line: 'watchdog-device = /dev/watchdog'
+  become: yes
+
+# TODO: Change watchdog-timeout (must be less than 30s) 15/20s?
+- name: WATCHDOG | ensure the watchdog-timeout is set in /etc/watchdog.conf
+  lineinfile:
+    path: /etc/watchdog.conf
+    regexp: '^watchdog-timeout'
+    line: 'watchdog-timeout        = 5'
+  become: yes
+
+- name: WATCHDOG | ensure the watchdog service is enabled and started
+  service:
+    name: watchdog.service
+    enabled: true
+    state: started
+  become: yes
+
+# enable watchdog based on information from https://wiki.odroid.com/odroid-xu4/application_note/software/linux_watchdog
+# write watchdog kernel module config, this is needed to enable power cycle
+# alternatively one could use the kernel boot parameters, but I personally prefer modprobe.d/
+- name: WATCHDOG | ensure kernel module s3c2410_wdt has correct options configured
+  lineinfile:
+    path:         /etc/modprobe.d/s3c2410_wdt.conf
+    create:       true
+    regexp:       '^options '
+    insertafter:  '^#options'
+    line:         'options s3c2410_wdt tmr_margin=30 tmr_atboot=1 nowayout=0'
+  become: yes
