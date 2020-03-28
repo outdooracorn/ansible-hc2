@@ -1,6 +1,7 @@
 ---
 - hosts:
-  - odroid_hc2s
+#  - odroid_hc2s
+  - hc2-01
 
   vars:
     ansible_user: ollie

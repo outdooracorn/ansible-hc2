@@ -1,20 +1,47 @@
 ---
-#- name: SETUP | Ensure storage mount path is ceated
-#  file:
-#    path: /data/glusterfs/hms-gfs-volume/brick{{ ansible_hostname.split('-')[1] }}
-#  register: t
-#  become: yes
+#- name: SETUP | Ensure storage mount path is created
+#    file:
+#      path: /data/glusterfs/hms-gfs-volume/brick{{ ansible_hostname[-2:] }}
+#      state: directory
+#    become: yes
 
-debug:
-  - msg: /data/glusterfs/hms-gfs-volume/brick{{ ansible_hostname.split('-')[1] }}
+- name: SETUP | Ensure lvm2 package is installed
+  apt:
+    name: lvm2
+    update_cache: yes
+    cache_valid_time: 3600  # only update apt cache if it's not been updated in over 1 hour (3,600 seconds)
+    upgrade: safe
+  become: yes
 
-- meta: end_play
+# equivalent to:
+- name: |
+  lvg:
+    vg: vg.gluster
+    pv: /dev/sda
+  become: yes
+
+# equivalent to: lvcreate --thinpool -l 70%VG lv-thin vg-gluster
+- name: |
+  lvol:
+    thinpool: lv.thin.gluster
+    size: 70%VG
+    vg: vg-gluster
+  become: yes
+
+- name: |
+  filesystem:
+    dev: /dev/mapper/vg.gluster-lv.thin.gluster
+    fstype: xfs
+  become: yes
 
 - name: SETUP | Ensure storage is mounted in fstab
   mount:
-    path: /mnt
-    fstype:
+    path: /data/glusterfs/hms-gfs-volume/brick{{ ansible_hostname[-2:] }}
+    src: /dev/mapper/vg.gluster-lv.thin.gluster
+    fstype: xfs
+    opts:
+    state: mounted
   become: yes
 
-- name: GLUSTERFS | Ensure GlusterFS is installed
-  apt:
+#- name: GLUSTERFS | Ensure GlusterFS is installed
+#  apt:
