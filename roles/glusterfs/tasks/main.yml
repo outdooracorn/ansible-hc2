@@ -21,21 +21,23 @@
 #  become: yes
 
 - name: INSTALL | Ensure the GlusterFS repo is added to the sources list
-    apt_repository:
-      repo: ppa:gluster/glusterfs-7
-      state: present
-    become: yes
+  apt_repository:
+    repo: ppa:gluster/glusterfs-7
+    state: present
+  become: yes
 
-- name: INSTALL | Ensure glustfs-server is installed
+- name: INSTALL | Ensure glusterfs-server is installed
   apt:
     pkg:
-    - glustfs-server
+    - glusterfs-server
     state: present
     update_cache: yes
     cache_valid_time: 3600  # only update apt cache if it's not been updated in over 1 hour (3,600 seconds)
+  become: yes
 
 - name: SERVICE | Ensure the GlusterFS service is enabled and running
   service:
-    name: glusterfs
+    name: glusterd
     state: started
     enabled: yes
+  become: yes
