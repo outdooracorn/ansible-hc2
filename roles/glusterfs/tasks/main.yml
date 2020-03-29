@@ -1,15 +1,12 @@
 ---
-
 - name: SETUP | Ensure each host has the other hosts in /etc/hosts
   lineinfile:
-    path: /ets/hosts
-    regexp: "^\s*{{item}}\s*{{hostvars[item].ansible_default_ipv4.address}}\s*$"
-    line: "{{item}} {{hostvars[item].ansible_default_ipv4.address}}"
-  when: item != inventory_hostname and inventory_hostname == "hc2-01"
+    path: /etc/hosts
+    regexp: '^\s*{{hostvars[item].ansible_default_ipv4.address}}\s*{{item}}\s*$'
+    line: "{{hostvars[item].ansible_default_ipv4.address}}\t{{item}}"
+  when: item != inventory_hostname
   loop: "{{ ansible_play_hosts_all }}"
   become: yes
-
-- meta: end_loop
 
 - import_tasks: drive-setup.yml
   tags: drive-setup
