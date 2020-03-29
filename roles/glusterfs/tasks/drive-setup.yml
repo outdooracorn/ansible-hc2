@@ -29,6 +29,8 @@
   filesystem:
     dev: /dev/mapper/vg.gluster-lv.thin.gluster
     fstype: xfs
+    opts:
+      - -i size=512
   become: yes
 
 - name: DRIVE-SETUP | Ensure LVM Thin Pool is in fstab and mounted

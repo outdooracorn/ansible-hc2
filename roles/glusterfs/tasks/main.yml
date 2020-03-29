@@ -11,15 +11,6 @@
 - import_tasks: drive-setup.yml
   tags: drive-setup
 
-#- name: INSTALL | Ensure software-properties-common is installed so the repo
-#    apt:
-#      pkg:
-#      - software-properties-common
-#    state: present
-#    update_cache: yes
-#    cache_valid_time: 3600  # only update apt cache if it's not been updated in over 1 hour (3,600 seconds)
-#  become: yes
-
 - name: INSTALL | Ensure the GlusterFS repo is added to the sources list
   apt_repository:
     repo: ppa:gluster/glusterfs-7

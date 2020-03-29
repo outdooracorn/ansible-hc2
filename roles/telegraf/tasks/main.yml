@@ -1,0 +1,10 @@
+# apt -y install telegraf smartmontools
+# mkdir -p /var/log/temps
+# touch /var/log/temps/hddtemps.log
+# cp drivetemp.sh /usr/sbin/
+# chmod 755 /usr/sbin/drivetemp.sh
+# echo "*/10 * * * * root /usr/sbin/drivetemp.sh" > /etc/cron.d/hddtemp
+# cp telegraf.conf /etc/telegraf/
+# sed -i "s/ACIDINFLUX/$INFLUXSERVER/g" /etc/telegraf/telegraf.conf
+# systemctl restart telegraf
+# systemctl enable telegraf
