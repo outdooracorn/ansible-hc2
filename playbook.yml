@@ -1,6 +1,6 @@
 ---
 - hosts:
-#  - odroid_hc2s
+#  - gluster_cluster
   - hc2-01
 
   vars:

@@ -1,49 +1,20 @@
 ---
-#- name: SETUP | Ensure storage mount path is created
-#    file:
-#      path: /data/glusterfs/hms-gfs-volume/brick{{ ansible_hostname[-2:] }}
-#      state: directory
-#    become: yes
 
-- name: SETUP | Ensure lvm2 and xfs packages are installed
-  apt:
-    pkg:
-     - lvm2
-     - xfsprogs
-    state: present
-    update_cache: yes
-    cache_valid_time: 3600  # only update apt cache if it's not been updated in over 1 hour (3,600 seconds)
+- name: SETUP | Ensure each host has the other hosts in /etc/hosts
+  lineinfile:
+    path: /ets/hosts
+    regexp: "^\s*{{item}}\s*{{hostvars[item].ansible_default_ipv4.address}}\s*$"
+    line: "{{item}} {{hostvars[item].ansible_default_ipv4.address}}"
+  when: item != inventory_hostname and inventory_hostname == "hc2-01"
+  loop: "{{ ansible_play_hosts_all }}"
   become: yes
 
-# equivalent to:
-- name: |
-  lvg:
-    vg: vg.gluster
-    pvs: /dev/sda
-  become: yes
+- meta: end_loop
 
-# equivalent to: lvcreate --thinpool -l 70%VG lv-thin vg-gluster
-- name: |
-  lvol:
-    thinpool: lv.thin.gluster
-    size: 70%VG
-    vg: vg.gluster
-  become: yes
+- import_tasks: drive-setup.yml
+  tags: drive-setup
 
-- name: |
-  filesystem:
-    dev: /dev/mapper/vg.gluster-lv.thin.gluster
-    fstype: xfs
-  become: yes
 
-- name: SETUP | Ensure storage is mounted in fstab
-  mount:
-    path: /data/glusterfs/hms-gfs-volume/brick{{ ansible_hostname[-2:] }}
-    src: /dev/mapper/vg.gluster-lv.thin.gluster
-    fstype: xfs
-    opts:
-    state: mounted
-  become: yes
 
 #- name: GLUSTERFS | Ensure GlusterFS is installed
 #  apt:

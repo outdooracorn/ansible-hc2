@@ -1,0 +1,41 @@
+---
+- name: DRIVE-SETUP | Ensure lvm2 and xfs packages are installed
+  apt:
+    pkg:
+     - lvm2
+     - xfsprogs
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600  # only update apt cache if it's not been updated in over 1 hour (3,600 seconds)
+  become: yes
+
+# equivalent to: vgcreate vg.gluster /dev/sda
+- name: DRIVE-SETUP | Ensure LVM Volume Group is created
+  lvg:
+    vg: vg.gluster
+    pvs: /dev/sda
+  become: yes
+
+# equivalent to: lvcreate --thinpool -l 70%VG lv.thin vg.gluster
+- name: DRIVE-SETUP | Ensure LVM Logical Volume Thin Pool is created
+  lvol:
+    thinpool: lv.thin.gluster
+    size: 70%VG
+    vg: vg.gluster
+  become: yes
+
+## !! WARNING !! Changing these settings could result in formatting the drive
+- name: DRIVE-SETUP | Ensure the LVM Thin Pool is formated XFS
+  filesystem:
+    dev: /dev/mapper/vg.gluster-lv.thin.gluster
+    fstype: xfs
+  become: yes
+
+- name: DRIVE-SETUP | Ensure LVM Thin Pool is in fstab and mounted
+  mount:
+    path: /data/glusterfs/hms-gfs-volume/brick{{ ansible_hostname[-2:] }}
+    src: /dev/mapper/vg.gluster-lv.thin.gluster
+    fstype: xfs
+    opts:
+    state: mounted
+  become: yes
