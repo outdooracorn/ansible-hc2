@@ -14,29 +14,43 @@
   lvg:
     vg: vg.gluster
     pvs: /dev/sda
+    force: no
   become: yes
 
 # equivalent to: lvcreate --thinpool -l 70%VG lv.thin vg.gluster
 - name: DRIVE-SETUP | Ensure LVM Logical Volume Thin Pool is created
   lvol:
-    thinpool: lv.thin.gluster
+    thinpool: lv.thin
     size: 70%VG
     vg: vg.gluster
+    force: no
   become: yes
 
 ## !! WARNING !! Changing these settings could result in formatting the drive
-- name: DRIVE-SETUP | Ensure the LVM Thin Pool is formated XFS
-  filesystem:
-    dev: /dev/mapper/vg.gluster-lv.thin.gluster
+- name: DRIVE-SETUP | Check if the LVM Thin Pool needs creating or editing
+  filesystem: &xfs_format_params
+    dev: /dev/mapper/vg.gluster-lv.thin
     fstype: xfs
-    opts:
-      - -i size=512
+    opts: -i size=512
+  check_mode: yes
+  register: xfs_format
+
+- name: DRIVE-SETUP | Ensure the LVM Thin Pool is not mounted if the XFS filesystem needs creating or editing
+  mount:
+    path: /data/glusterfs/hms-gfs-volume/brick{{ ansible_hostname[-2:] }}
+    src: /dev/mapper/vg.gluster-lv.thin
+    state: unmounted
+  become: yes
+  when: xfs_format.changed
+
+- name: DRIVE-SETUP | Ensure the LVM Thin Pool is formated XFS
+  filesystem: *xfs_format_params
   become: yes
 
 - name: DRIVE-SETUP | Ensure LVM Thin Pool is in fstab and mounted
   mount:
     path: /data/glusterfs/hms-gfs-volume/brick{{ ansible_hostname[-2:] }}
-    src: /dev/mapper/vg.gluster-lv.thin.gluster
+    src: /dev/mapper/vg.gluster-lv.thin
     fstype: xfs
     opts:
     state: mounted
