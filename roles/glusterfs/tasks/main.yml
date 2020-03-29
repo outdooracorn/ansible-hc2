@@ -5,19 +5,21 @@
 #      state: directory
 #    become: yes
 
-- name: SETUP | Ensure lvm2 package is installed
+- name: SETUP | Ensure lvm2 and xfs packages are installed
   apt:
-    name: lvm2
+    pkg:
+     - lvm2
+     - xfsprogs
+    state: present
     update_cache: yes
     cache_valid_time: 3600  # only update apt cache if it's not been updated in over 1 hour (3,600 seconds)
-    upgrade: safe
   become: yes
 
 # equivalent to:
 - name: |
   lvg:
     vg: vg.gluster
-    pv: /dev/sda
+    pvs: /dev/sda
   become: yes
 
 # equivalent to: lvcreate --thinpool -l 70%VG lv-thin vg-gluster
@@ -25,7 +27,7 @@
   lvol:
     thinpool: lv.thin.gluster
     size: 70%VG
-    vg: vg-gluster
+    vg: vg.gluster
   become: yes
 
 - name: |
