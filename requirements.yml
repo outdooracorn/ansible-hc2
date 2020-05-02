@@ -1,1 +1,2 @@
-- src: https://github.com/gluster/gluster-ansible-infra.git
+- name: gluster.infra
+  src: https://github.com/gluster/gluster-ansible-infra.git

@@ -1,7 +1,7 @@
 ---
 - hosts:
-#  - gluster_cluster
-  - hc2-01
+  - gluster_cluster
+#  - hc2-01
 
   vars:
     ansible_user: ollie

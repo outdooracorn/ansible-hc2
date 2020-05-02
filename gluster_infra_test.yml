@@ -10,16 +10,17 @@
     gluster_infra_disktype: JBOD
 
     gluster_infra_volume_groups:
-      - vgname: { vg.gluster, pvname: /dev/sda }
+      - { vgname: vg.gluster, pvname: /dev/sda }
 
     gluster_infra_thinpools:
       - { vgname: vg.gluster, thinpoolname: thinpool }
 
     gluster_infra_lv_logicalvols:
-      - { vgname: vg.gluster, thinpool: thinpool, lvname: lv.thin }
+      - { vgname: vg.gluster, thinpool: thinpool, lvname: lv.thin, lvsize: 2.2t }
 
     gluster_infra_mount_devices:
-      - { path: /data/gluster/brick{{ ansible_hostname[-2:] }}, vgname: vg.gluster, lvname: lv.thin }
+      - { path: "/mnt/brick{{ ansible_hostname[-2:] }}", vgname: vg.gluster, lvname: lv.thin }
 
   roles:
     - role: gluster.infra
+      become: yes
