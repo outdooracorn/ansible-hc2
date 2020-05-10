@@ -6,21 +6,25 @@
   vars:
     ansible_user: ollie
 
-     # Set a disk type, Options: JBOD, RAID6, RAID10
-    gluster_infra_disktype: JBOD
-
-    gluster_infra_volume_groups:
-      - { vgname: vg.gluster, pvname: /dev/sda }
-
-    gluster_infra_thinpools:
-      - { vgname: vg.gluster, thinpoolname: thinpool }
-
-    gluster_infra_lv_logicalvols:
-      - { vgname: vg.gluster, thinpool: thinpool, lvname: lv.thin, lvsize: 2.2t }
-
-    gluster_infra_mount_devices:
-      - { path: "/mnt/brick{{ ansible_hostname[-2:] }}", vgname: vg.gluster, lvname: lv.thin }
-
   roles:
     - role: gluster.infra
+      vars:
+        # Set a disk type, Options: JBOD, RAID6, RAID10
+        gluster_infra_disktype: JBOD
+
+        # https://github.com/gluster/gluster-ansible-infra#volume-groups-variable
+        gluster_infra_volume_groups:
+          - { vgname: vg.gluster, pvname: /dev/sda }
+          -
+        # https://github.com/gluster/gluster-ansible-infra#logical-volume-variable
+        gluster_infra_lv_logicalvols:
+          - { vgname: vg.gluster, thinpool: thinpool, lvname: lv.thin, lvsize: 100%VG }
+          -
+        # https://github.com/gluster/gluster-ansible-infra#thinpool-variable
+        gluster_infra_thinpools:
+          - { vgname: vg.gluster, thinpoolname: thinpool, poolmetadatasize: 16G, thinpoolsize: 100%FREE }
+          -
+        # https://github.com/gluster/gluster-ansible-infra#variables-for-mounting-the-filesystem
+        gluster_infra_mount_devices:
+          - { path: "/mnt/brick{{ ansible_hostname[-2:] }}", vgname: vg.gluster, lvname: lv.thin }
       become: yes
