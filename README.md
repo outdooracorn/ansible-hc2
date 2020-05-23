@@ -1,7 +1,11 @@
 # ansible-hc2
+Repository of ansible playbooks and roles for managing my Odroid HC2 GlusterFS 
+and K8s cluster.
+
 
 ## Getting started
-**NOTE:** Ansible can't be installed on Windows. It is possible to manage Windows via though.
+**NOTE:** Ansible can't be installed on Windows. 
+It is possible to manage Windows machines via ansible though.
  
 ### Setup a clean working environment (optional)
 #### Create Python virtual environment

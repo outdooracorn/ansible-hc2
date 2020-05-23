@@ -1,10 +1,21 @@
 ---
+
+## Run ##
+# ansible-playbook -i hosts.ini gluster_infra_test.yml -K
+#
+# From ansible-playbook -h:
+# -i INVENTORY, --inventory INVENTORY, --inventory-file INVENTORY
+#                        specify inventory host path or comma separated host list. --inventory-file is deprecated
+# -K, --ask-become-pass
+#                        ask for privilege escalation password
+
 - hosts:
 #  - gluster_cluster
-  - hc2-01
+  - hc2-02
 
   vars:
     ansible_user: ollie
+#    ansible_python_interpreter: /usr/bin/python3
 
   roles:
     - role: gluster.infra
@@ -15,15 +26,15 @@
         # https://github.com/gluster/gluster-ansible-infra#volume-groups-variable
         gluster_infra_volume_groups:
           - { vgname: vg.gluster, pvname: /dev/sda }
-          -
+
         # https://github.com/gluster/gluster-ansible-infra#logical-volume-variable
         gluster_infra_lv_logicalvols:
           - { vgname: vg.gluster, thinpool: thinpool, lvname: lv.thin, lvsize: 100%VG }
-          -
+
         # https://github.com/gluster/gluster-ansible-infra#thinpool-variable
         gluster_infra_thinpools:
           - { vgname: vg.gluster, thinpoolname: thinpool, poolmetadatasize: 16G, thinpoolsize: 100%FREE }
-          -
+
         # https://github.com/gluster/gluster-ansible-infra#variables-for-mounting-the-filesystem
         gluster_infra_mount_devices:
           - { path: "/mnt/brick{{ ansible_hostname[-2:] }}", vgname: vg.gluster, lvname: lv.thin }
